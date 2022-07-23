@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename= 'css/styles.css') }}"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <title>Healthcare Chatbot</title>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="title">Healthcare Chatbot</div>
+      <div class="box"></div>
+      <!--<div class="box">
+        <div class="item">
+          <div class="icon">
+            <i class="fa fa-user"></i>
+          </div>
+          <div class="msg">
+            <p>
+              Hello. I try to predict your condition by asking some questions.
+              Please answer y for yes or n for no
+            </p>
+          </div>
+        </div>-->
+      <!--<br clear="both" />
+        <div class="item right">
+          <div class="msg">
+            <p>Nice</p>
+          </div>
+        </div>
+      </div>-->
+
+      <div class="typing-area">
+        <div class="input-field">
+          <div class="form-check form-check-inline">
+            <input
+              class="form-check-input"
+              type="radio"
+              name="inlineRadioOptions"
+              id="inlineRadio1"
+              value="1"
+            />
+            <label class="form-check-label" for="inlineRadio1">Yes</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input
+              class="form-check-input"
+              type="radio"
+              name="inlineRadioOptions"
+              id="inlineRadio2"
+              value="0"
+            />
+            <label class="form-check-label" for="inlineRadio2">No</label>
+          </div>
+          <button class="send">Next</button>
+        </div>
+      </div>
+
+      <!--<div class="typing-area">
+        <div class="input-field">
+          <input
+            id="textInput"
+            type="text"
+            placeholder="Type your message"
+            required
+          />
+          <button class="send">Send</button>
+        </div>
+      </div>-->
+
+      <div class="gap"></div>
+
+      <!--<div class="typing-area">
+        <form action="" class="input-field">
+          <input
+            type="text"
+            class="msg-input"
+            placeholder="Type y or n"
+            required
+          />
+          <button>Send</button>
+        </form>
+      </div>-->
+    </div>
+
+    <script>
+      //var msgChat=document.querySelector(".wrapper");
+      /*document.querySelector(".reset").addEventListener("click",()=>{
+        location.reload(true);
+      })*/
+      const imp_features = {{ data | tojson }};
+      for(let j=0;j<imp_features.length;j++)
+      {
+        imp_features[j]=imp_features[j].replaceAll('_',' ');
+      }
+      let i=0;
+      var msgBot=`
+        <div class="item">
+          <div class="icon">
+            <i class="fa fa-user"></i>
+          </div>
+          <div class="msg">
+            <p>Do you have ${imp_features[i]} ?</p>
+          </div>
+        </div>`;
+      $(".box").append(msgBot);
+
+      var symptoms_present = [];
+      var userInput,msgText;
+      var send=document.querySelector(".send");
+       send.addEventListener("click",()=>{
+        var ele=document.querySelectorAll(".form-check-input");
+        if(ele[0].checked)
+          {
+            userInput=ele[0].value;
+            msgText="Yes";
+            ele[0].checked=false;
+          }
+        if(ele[1].checked)
+          {
+            userInput=ele[1].value;
+            msgText="No"
+            ele[1].checked=false;
+          }
+        //let userInput = $("#textInput").val();
+        //$('#textInput').val('');
+        symptoms_present.push(Number(userInput));
+        if(symptoms_present.length==imp_features.length)
+        {
+          //console.log(symptoms_present);
+          $.get("/symptoms",{'data[]' : symptoms_present}).done(function(result){
+            //console.log(result)
+            var msgBot=`
+        <div class="item">
+          <div class="icon-op">
+            <i class="fa fa-user"></i>
+          </div>
+          <div class="msg-op">
+            <p>You may have ${result}</p>
+          </div>
+        </div>`;
+        $(".box").append(msgBot);
+        $(".input-field").empty();
+        /*var resetBtn=`<button class="reset">Reset</button>`;
+        $(".input-field").append(resetBtn);*/
+        document.querySelector(".gap").scrollIntoView(true);
+          });
+          /*$.ajax({
+            url:'/symptoms',
+            type:'get',
+            data:{userSymptoms:symptoms_present},
+            success:function(res){}
+          });*/
+        }
+
+        var msgUser=`
+        <br clear="both" />
+        <div class="item right">
+          <div class="msg">
+            <p>${msgText}</p>
+          </div>
+        </div>`;
+        $(".box").append(msgUser);
+        if(i<imp_features.length-1)
+        {
+          i++;
+          var msgBot=`
+        <div class="item">
+          <div class="icon">
+            <i class="fa fa-user"></i>
+          </div>
+          <div class="msg">
+            <p>Do you have ${imp_features[i]} ?</p>
+          </div>
+        </div>`;
+        setTimeout(()=>{
+          $(".box").append(msgBot);
+          document.querySelector(".gap").scrollIntoView(true);
+          //document.querySelectorAll(".gap")[1].scrollIntoView(true);
+        },500)
+        }
+       })
+
+
+
+      /*for (let i = 0; i < imp_features.length; i++) {
+       // console.log(imp_features[i]);
+       var msgHTML=`<div class="box">
+        <div class="item">
+          <div class="icon">
+            <i class="fa fa-user"></i>
+          </div>
+          <div class="msg">
+            <p>Do you have ${imp_features[i]}</p>
+          </div>
+        </div>
+        </div>`;
+       var userInput=`<div class="typing-area">
+        <form action="" class="input-field">
+          <input
+            type="text"
+            class="msg-input"
+            placeholder="Type y or n"
+            required
+          />
+          <button>Send</button>
+        </form>
+      </div>`;
+       msgChat.insertAdjacentHTML("beforeend", msgHTML);
+       //msgChat.innerHTML=msgHTML;
+       msgChat.insertAdjacentHTML("beforeend", userInput);
+       var form=document.querySelector(".input-field");
+       form.addEventListener("submit",(event)=>{
+        event.preventDefault();
+        var msgText=document.querySelector(".msg-input").value;
+        console.log(msgText);
+       })
+      }*/
+      /*const msgForm = get(".input-field");
+      const msgInput = get(".msg-input");
+
+      msgForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const msgText = msgInput.value;
+        if (!msgText) return;
+        appendMessage(PERSON_NAME, PERSON_IMG, "right", msgText);
+        msgerInput.value = "";
+        botResponse(msgText);
+      });
+
+      function appendMessage() {
+        const msgHTML = ``;
+      }*/
+    </script>
+  </body>
+</html>
